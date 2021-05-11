@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func main() {
@@ -15,7 +16,9 @@ func main() {
 
 	bot.Debug = true
 	quotes := readfile()
+	words := readAndrfile()
 	quoteIndex := 0
+	wordIndex := 0
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -32,6 +35,16 @@ func main() {
 		if update.Message.Text == "/телка" {
 			quote := ""
 			quoteIndex, quote = getNextQuote(quotes, quoteIndex)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, quote)
+			msg.ReplyToMessageID = update.Message.MessageID
+			bot.Send(msg)
+		}
+		if update.Message.From.UserName == "andrey_ya_huy_sredi_blyadey" ||
+			update.Message.From.UserName == "@andrey_ya_huy_sredi_blyadey" ||
+			update.Message.From.UserName == "gleb28" ||
+			update.Message.From.UserName == "@gleb28" {
+			quote := ""
+			quoteIndex, quote = getNextQuote(words, wordIndex)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, quote)
 			msg.ReplyToMessageID = update.Message.MessageID
 			bot.Send(msg)
@@ -53,6 +66,26 @@ func getNextQuote(quotes []string, quoteIndex int) (int, string) {
 func readfile() []string {
 	buff := make([]string, 0)
 	file, err := os.Open("./quotes.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		buff = append(buff, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return buff
+}
+
+func readAndrfile() []string {
+	buff := make([]string, 0)
+	file, err := os.Open("./andrey.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
