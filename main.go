@@ -26,14 +26,15 @@ var usersCount map[string]int = map[string]int{
 }
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("put_your_token_here")
+	rand.Seed(time.Now().UnixNano())
+	bot, err := tgbotapi.NewBotAPI("your_token")
 	if err != nil {
 		log.Panic(err)
 	}
 
 	bot.Debug = true
-	quotes := readfile()
-	words := readAndrfile()
+	quotes := readfile("./quotes.txt")
+	words := readfile("./andrey.txt")
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -49,7 +50,8 @@ func main() {
 
 		if update.Message.Text == "/телка" {
 			quote := ""
-			quote = getNextQuote(quotes, len(quotes)-1)
+			quoteIndex := random(0, len(quotes)-1)
+			quote = quotes[quoteIndex]
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, quote)
 			msg.ReplyToMessageID = update.Message.MessageID
 			bot.Send(msg)
@@ -57,10 +59,9 @@ func main() {
 
 		if usersCount[update.Message.From.UserName] == 0 {
 			usersCount[update.Message.From.UserName] = 50
-			rand.Seed(time.Now().UnixNano())
 			wordIndex := random(0, len(words)-1)
 			quote := ""
-			quote = getNextQuote(words, wordIndex)
+			quote = words[wordIndex]
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, quote)
 			msg.ReplyToMessageID = update.Message.MessageID
 			bot.Send(msg)
@@ -70,38 +71,9 @@ func main() {
 	}
 }
 
-func getNextQuote(quotes []string, quoteIndex int) string {
-	if quoteIndex >= len(quotes)-1 {
-		quoteIndex = 0
-	} else {
-		quoteIndex = quoteIndex + 1
-	}
-	return quotes[quoteIndex]
-}
-
-func readfile() []string {
+func readfile(path string) []string {
 	buff := make([]string, 0)
-	file, err := os.Open("./quotes.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		buff = append(buff, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return buff
-}
-
-func readAndrfile() []string {
-	buff := make([]string, 0)
-	file, err := os.Open("./andrey.txt")
+	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
