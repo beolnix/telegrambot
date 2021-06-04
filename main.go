@@ -5,6 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -23,6 +25,45 @@ var usersCount map[string]int = map[string]int{
 	"Ultramarchick":               50,
 	"Pesocha":                     50,
 	"MaxLyuchin":                  50,
+}
+
+var goodMorning []string = []string{
+	"Добро утро",
+	"Утро доброе",
+	"ДоБрОе УтРо",
+	"Утречко доброе",
+	"ДОБРОЕ УТРО",
+	"УтреЧКО ДоБроЕ",
+	"Добрий ранок",
+	"Ранок добрий",
+}
+
+var goodNight []string = []string{
+	"спокойнойночи",
+	"ночиспокойной",
+	"добройночи",
+	"ночидоброй",
+	"добрыхснов",
+	"сновдобрых",
+	"сладких",
+	"сладкойночи",
+	"ночисладкой",
+	"приятныхснов",
+	"сновприятных",
+	"спокойнойночки",
+	"ночкиспокойной",
+	"спокойногосна",
+	"снаспокойного",
+	"добрых",
+	"солодкихснів",
+	"снівсолодких",
+	"надобраніч",
+	"доброїночі",
+	"ночідоброї",
+	"спокійноїночі",
+	"ночіспокійної",
+	"солодких",
+	"доброї",
 }
 
 func main() {
@@ -53,6 +94,19 @@ func main() {
 			quoteIndex := random(0, len(quotes)-1)
 			quote = quotes[quoteIndex]
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, quote)
+			msg.ReplyToMessageID = update.Message.MessageID
+			bot.Send(msg)
+		}
+
+		reg, err := regexp.Compile("[^а-яА-ЯёЁЇїІіЄєҐґ]+")
+		if err != nil {
+			log.Fatal(err)
+		}
+		processedString := reg.ReplaceAllString(update.Message.Text, "")
+		if contains(goodNight, strings.ToLower(processedString)) {
+			indx := random(0, len(goodMorning)-1)
+			word := goodMorning[indx]
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, word)
 			msg.ReplyToMessageID = update.Message.MessageID
 			bot.Send(msg)
 		}
@@ -93,4 +147,13 @@ func readfile(path string) []string {
 
 func random(min int, max int) int {
 	return rand.Intn(max-min) + min
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
