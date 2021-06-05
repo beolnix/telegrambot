@@ -27,45 +27,6 @@ var usersCount map[string]int = map[string]int{
 	"MaxLyuchin":                  50,
 }
 
-var goodMorning []string = []string{
-	"Добро утро",
-	"Утро доброе",
-	"ДоБрОе УтРо",
-	"Утречко доброе",
-	"ДОБРОЕ УТРО",
-	"УтреЧКО ДоБроЕ",
-	"Добрий ранок",
-	"Ранок добрий",
-}
-
-var goodNight []string = []string{
-	"спокойнойночи",
-	"ночиспокойной",
-	"добройночи",
-	"ночидоброй",
-	"добрыхснов",
-	"сновдобрых",
-	"сладких",
-	"сладкойночи",
-	"ночисладкой",
-	"приятныхснов",
-	"сновприятных",
-	"спокойнойночки",
-	"ночкиспокойной",
-	"спокойногосна",
-	"снаспокойного",
-	"добрых",
-	"солодкихснів",
-	"снівсолодких",
-	"надобраніч",
-	"доброїночі",
-	"ночідоброї",
-	"спокійноїночі",
-	"ночіспокійної",
-	"солодких",
-	"доброї",
-}
-
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	bot, err := tgbotapi.NewBotAPI("your_token")
@@ -77,6 +38,9 @@ func main() {
 	quotes := readfile("./quotes.txt")
 	words := readfile("./andrey.txt")
 
+	goodNight := readfile("./gn.txt")
+	goodMorning := readfile("./gm.txt")
+
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
@@ -87,6 +51,31 @@ func main() {
 	for update := range updates {
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
+		}
+
+		if strings.Contains(update.Message.Text, "/addGNword") {
+			result := strings.ReplaceAll(update.Message.Text, "/addGNword", "")
+			file, err := os.OpenFile("gn.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				log.Fatalf("failed creating file: %s", err)
+			}
+			datawriter := bufio.NewWriter(file)
+			_, _ = datawriter.WriteString(result + "\n")
+			datawriter.Flush()
+			file.Close()
+			goodNight = readfile("./gn.txt")
+		}
+		if strings.Contains(update.Message.Text, "/addGMword") {
+			result := strings.ReplaceAll(update.Message.Text, "/addGMword", "")
+			file, err := os.OpenFile("gm.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				log.Fatalf("failed creating file: %s", err)
+			}
+			datawriter := bufio.NewWriter(file)
+			_, _ = datawriter.WriteString(result + "\n")
+			datawriter.Flush()
+			file.Close()
+			goodMorning = readfile("./gm.txt")
 		}
 
 		if update.Message.Text == "/телка" {
@@ -151,7 +140,7 @@ func random(min int, max int) int {
 
 func contains(s []string, e string) bool {
 	for _, a := range s {
-		if a == e {
+		if strings.Contains(e, a) {
 			return true
 		}
 	}
